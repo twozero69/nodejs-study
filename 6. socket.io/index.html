@@ -14,9 +14,20 @@
         <button type="submit">전송</button>
     </form>
 
+    <!-- socket.io예제 -->
     <script src="/socket.io/socket.io.js"></script>
     <script>
+        //io()만으로 socket.io서버와 연결
         const socket = io();
+        
+        //어디랑 연결할지 명시하지않는게 매우 이상하다면 다음 코드를 사용하여 편안해지자
+        //const socket = io(http://localhost:3000);
+
+        //서버와 연결성공시 발생하는 connect이벤트, socket.io서버의 connection이벤트와 이름이 다름에 주의
+        socket.on('connect', (arg) => {
+            console.log('server connect!!');
+        })
+
         const msgform = document.getElementById('msgform');
         // socket.on 함수로 서버에서 전달하는 신호를 수신
         socket.on('usercount', (count) => {
@@ -41,6 +52,32 @@
 
             msginput.value = "";
         };
+    </script>
+
+    <!-- socket.io namepace, room 예제 -->
+    <script>
+        //커스텀 네임스페이스를 이용한 연결
+        const nspSocket = io('/mynamespace');
+        // const nspSocket = io('http://localhost:3000/mynamespace');
+
+        //네임스페이스 서버와 연결시 실행되는 이벤트
+        nspSocket.on('connect', (arg) => {
+            console.log('mynamespace connect!!');
+        })
+
+        //서버에서 namespace에 속하는 소켓에게 발생시키는 이벤트
+        nspSocket.on('hi-namespace', (newSocketID) => {
+            console.log(`hi-namespace from newSocket ID is ${newSocketID}`);
+        })
+
+        //nspSocket을 room에 join함
+        nspSocket.emit('join-room');
+
+        //서버에서 room에 속한 소켓에게 발생시키는 이벤트
+        nspSocket.on('hi-room', (newSocketID) => {
+            alert(`hi-room from newSocket ID is ${newSocketID}`);
+        })
+
     </script>
 </body>
 </html>
