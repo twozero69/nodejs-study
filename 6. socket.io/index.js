@@ -36,8 +36,8 @@ io.on('connection', (socket) => {   //client가 접속하면 발생하는 이벤
         //io.emit()으로 연결된 모든 소켓에 이벤트 발생.
         io.emit('chat', msg);
     });
-})
+});
 
 httpServer.listen(3000, () => {
     console.log('server is running ...');
-})
+});
