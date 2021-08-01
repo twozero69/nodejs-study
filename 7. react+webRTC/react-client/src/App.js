@@ -1,18 +1,21 @@
 import { useEffect, useRef, useState } from "react";
 import { io } from "socket.io-client";
-import { Peer } from "simple-peer";
+import Peer from "simple-peer";
 
-const socket = io(process.env.REACT_APP_ETH_SERVER_URL);
+const socket = io("http://localhost:8080");
+// const socket = io(process.env.REACT_APP_ETH_SERVER_URL);
 
 const App = () => {
   /* hooks */
   //state setting
   const [me, setMe] = useState('');
+  const [myName, setMyName] = useState('');
   const [stream, setStream] = useState(null);
   const [userdata, setUserdata] = useState({});
   const [receiveFlag, setReceiveFlag] = useState(false);
   const [acceptFlag, setAcceptFlag] = useState(false);
   const [endFlag, setEndFlag] = useState(false);
+  const [socketIDtoCall, setSocketIDtoCall] = useState("");
   
   //reference setting
   const myVideo = useRef();
@@ -33,22 +36,18 @@ const App = () => {
     });
 
     //client socket setting
-    socket.on('connect', (arg) => {
-      console.log(arg);
-      console.log(socket.id);
-    })
-
     socket.on('me', (id) => {
       setMe(id);
     });
 
     socket.on('callUser', (data) => {
-      setUserdata(data);
+      setUserdata(data);  //data{from:caller, name:callername, signal:callersignal}
       setReceiveFlag(true);
     })
 
   }, []);
 
+  //initiate video chat to user
   const callUser = (id) => {
 
     const peer = new Peer({ //options(https://github.com/feross/simple-peer 에서 설명을 볼 수 있다.)
@@ -59,10 +58,10 @@ const App = () => {
 
     peer.on('signal', (data) => {
       socket.emit('callUser', {
-        userID: id,
-        signalData: data,
-        from: me,
-        name: userdata.name
+        userID: id, //전화를 걸려고 하는 user의 ID
+        signal: data, //signal data
+        from: me, //전화를 initiate하는 socket의 ID
+        name: myName //전화를 initiate하는 사람의 name
       })
     });
 
@@ -91,8 +90,8 @@ const App = () => {
 
     peer.on('signal', (data) => {
       socket.emit('answerCall', {
-        signal: data,
-        to: userdata.caller,
+        signal: data, //signal data
+        to: userdata.from,  //전화를 건 상대의 socket ID
       });
     });
 
@@ -100,7 +99,7 @@ const App = () => {
       userVideo.current.srcObject = stream;
     });
 
-    peer.signal(userdata.callerSignal);
+    peer.signal(userdata.signal);
     connection.current = peer;
   }
 
@@ -109,15 +108,54 @@ const App = () => {
     connection.current.destroy();
   }
 
+  const onMyNameChange = (event) => {
+    const {target : {value}} =event;
+    setMyName(value);
+  }
+
+  const onSocketIDtoCallChange = (event) => {
+    const {target : {value}} =event;
+    setSocketIDtoCall(value);
+  }
 
   return (
     <div className="App">
       <h1>webRTC video chat example</h1>
-      <div className="myVideo">
-        {stream && <video playsInline autoPlay muted style={{width: '300px'}}/>}
+
+      <h3>my ID : {me}</h3>
+      <div>
+        <span>my name : </span>
+        <input type="text" value={myName} onChange={onMyNameChange}/>
       </div>
-      <div className="remoteVideo">
-        {(acceptFlag && !endFlag) && <video playsInline autoPlay style={{width: '300px'}}/>}
+      <div>
+        <span>ID To Call</span>
+        <input type="text" value={socketIDtoCall} onChange={onSocketIDtoCallChange}/>
+      </div>
+
+      <div className="buttons">
+        <div className="call button">
+          {acceptFlag && !endFlag ? (
+            <button onClick={leaveCall}>End Call</button>
+          ) : (
+            <button onClick={() => {callUser(socketIDtoCall)}}>Start Call</button>
+          )}
+        </div>
+
+        <div className="receive button">
+          {(receiveFlag && !acceptFlag) && <>
+            <h1>{userdata.name} is calling ...</h1>
+            <button onClick={answerCall}>Answer</button>
+          </>}
+        </div>
+      </div>
+
+      <div className="video container">
+        <div className="myVideo">
+          {stream && <video ref={myVideo} playsInline autoPlay muted style={{width: '300px'}}/>}
+        </div>
+        <div className="userVideo">
+          {(acceptFlag && !endFlag) && <video ref={userVideo} playsInline autoPlay style={{width: '300px'}}/>}
+        </div>
       </div>
     </div>
   );

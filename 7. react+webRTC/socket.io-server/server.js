@@ -5,13 +5,15 @@ const app = express();
 const server = http.createServer(app);
 const io = require('socket.io')(server, {
     cors: {
-        origin: `http://localhost:${port}`,
+        origin: `http://localhost:3000`,    //react app이 동작하는 주소
         methods: ['GET', 'POST']
     }
 });
 
 
 io.on('connection', (socket) => {
+    console.log('new client connect!!');
+
     //연결된 socket의 id를 돌려준다.
     socket.emit('me', socket.id);
 
@@ -20,16 +22,16 @@ io.on('connection', (socket) => {
         socket.broadcast.emit('callEnded');
     });
 
-    socket.on('callUser', (data) => {
-        io.to(data.userToCall).emit('callUser', {
-            signal: data.signalData,
-            from: data.from,
-            name: data.name
+    socket.on('callUser', ({userID, signal, from, name}) => {
+        io.to(userID).emit('callUser', {
+            signal: signal,
+            from: from,
+            name: name
         });
     });
 
-    socket.on('answerCall', (data) => {
-        io.to(data.to).emit('callAccepted', data.signal);
+    socket.on('answerCall', ({signal, to}) => {
+        io.to(to).emit('callAccepted', signal);
     });
 })
 
