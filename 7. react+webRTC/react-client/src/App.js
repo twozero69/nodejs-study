@@ -75,7 +75,6 @@ const App = () => {
     });
 
     connection.current = peer;
-
   };
 
   const answerCall = () => {
@@ -95,8 +94,8 @@ const App = () => {
       });
     });
 
-    peer.on('stream', (stream) => {
-      userVideo.current.srcObject = stream;
+    peer.on('stream', (callerstream) => {
+      userVideo.current.srcObject = callerstream;
     });
 
     peer.signal(userdata.signal);
@@ -109,12 +108,12 @@ const App = () => {
   }
 
   const onMyNameChange = (event) => {
-    const {target : {value}} =event;
+    const {target : {value}} = event;
     setMyName(value);
   }
 
   const onSocketIDtoCallChange = (event) => {
-    const {target : {value}} =event;
+    const {target : {value}} = event;
     setSocketIDtoCall(value);
   }
 

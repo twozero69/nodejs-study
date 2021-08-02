@@ -3,9 +3,10 @@ const express = require('express');
 const http = require('http');
 const app = express();
 const server = http.createServer(app);
+// const io = require('socket.io')(server);
 const io = require('socket.io')(server, {
     cors: {
-        origin: `http://localhost:3000`,    //react app이 동작하는 주소
+        origin: 'http://localhost:3000',    //react app이 동작하는 주소
         methods: ['GET', 'POST']
     }
 });
@@ -31,7 +32,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('answerCall', ({signal, to}) => {
-        io.to(to).emit('callAccepted', signal);
+        io.to(to).emit('callAccept', signal);
     });
 })
 
