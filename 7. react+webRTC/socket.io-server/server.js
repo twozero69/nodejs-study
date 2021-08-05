@@ -6,7 +6,8 @@ const server = http.createServer(app);
 // const io = require('socket.io')(server);
 const io = require('socket.io')(server, {
     cors: {
-        origin: 'http://localhost:3000',    //react app이 동작하는 주소
+        origin: '*',
+        // origin: 'http://localhost:3000',    //react app이 동작하는 주소
         methods: ['GET', 'POST']
     }
 });
